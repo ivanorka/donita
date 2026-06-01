@@ -5,6 +5,7 @@ const priceCards = document.querySelectorAll(".price-card");
 const priceSearch = document.querySelector("#priceSearch");
 const contactForm = document.querySelector("#contactForm");
 const formStatus = document.querySelector(".form-status");
+const priceEmpty = document.querySelector(".price-empty");
 let searchTimer;
 
 function updateIcons() {
@@ -18,38 +19,37 @@ function closeNavigation() {
   navToggle?.setAttribute("aria-expanded", "false");
 }
 
-function applyPriceFilter(matches = null) {
+function normalizeText(value) {
+  return String(value || "")
+    .toLocaleLowerCase("hr-HR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function applyPriceFilter() {
   const activeFilter = document.querySelector("[data-filter].active")?.dataset.filter || "all";
-  const query = priceSearch?.value.trim().toLocaleLowerCase("hr-HR") || "";
-  const matchedTitles = matches ? new Set(matches.map((item) => item.title)) : null;
+  const query = normalizeText(priceSearch?.value);
+  let visibleCount = 0;
 
   priceCards.forEach((card) => {
     const matchesCategory = activeFilter === "all" || card.dataset.category === activeFilter;
-    const matchesSearch = matchedTitles
-      ? matchedTitles.has(card.querySelector("h3")?.textContent)
-      : !query || card.textContent.toLocaleLowerCase("hr-HR").includes(query);
-    card.hidden = !(matchesCategory && matchesSearch);
+    const matchesSearch = !query || normalizeText(card.textContent).includes(query);
+    const isVisible = matchesCategory && matchesSearch;
+    card.hidden = !isVisible;
+    if (isVisible) {
+      visibleCount += 1;
+    }
   });
+
+  if (priceEmpty) {
+    priceEmpty.hidden = visibleCount > 0;
+  }
 }
 
 async function filterPrices() {
-  const query = priceSearch?.value.trim() || "";
-
-  if (!query) {
-    applyPriceFilter();
-    return;
-  }
-
-  try {
-    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-    if (!response.ok) {
-      throw new Error("Search request failed");
-    }
-    const payload = await response.json();
-    applyPriceFilter(payload.results);
-  } catch {
-    applyPriceFilter();
-  }
+  applyPriceFilter();
 }
 
 function queuePriceFilter() {
@@ -102,8 +102,8 @@ contactForm?.addEventListener("submit", async (event) => {
     }
 
     contactForm.reset();
-    formStatus.textContent = "Hvala, upit je zaprimljen. Javit ćemo se uskoro.";
-    formStatus.classList.add("success");
+    formStatus.textContent = result.message || "Hvala, upit je zaprimljen.";
+    formStatus.classList.add(result.emailSent ? "success" : "warning");
   } catch (error) {
     formStatus.textContent = error.message || "Trenutno ne možemo poslati upit. Molimo nazovite salon.";
     formStatus.classList.add("error");

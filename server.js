@@ -1,5 +1,6 @@
 const http = require("node:http");
 const fs = require("node:fs/promises");
+const fsSync = require("node:fs");
 const path = require("node:path");
 const { randomUUID } = require("node:crypto");
 
@@ -7,6 +8,8 @@ const root = __dirname;
 const port = Number(process.env.PORT || 4173);
 const dataDir = path.join(root, "data");
 const submissionsPath = path.join(dataDir, "contact-submissions.jsonl");
+
+loadEnvFile();
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -26,6 +29,23 @@ function sendJson(response, status, payload) {
     "Cache-Control": "no-store",
   });
   response.end(JSON.stringify(payload));
+}
+
+function loadEnvFile() {
+  try {
+    const contents = fsSync.readFileSync(path.join(root, ".env"), "utf8");
+    contents.split(/\r?\n/).forEach((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) return;
+      const separator = trimmed.indexOf("=");
+      if (separator === -1) return;
+      const key = trimmed.slice(0, separator).trim();
+      const value = trimmed.slice(separator + 1).trim().replace(/^["']|["']$/g, "");
+      if (key && process.env[key] === undefined) {
+        process.env[key] = value;
+      }
+    });
+  } catch {}
 }
 
 function normalize(value) {
@@ -148,7 +168,78 @@ async function saveContact(request, response) {
 
   await fs.mkdir(dataDir, { recursive: true });
   await fs.appendFile(submissionsPath, `${JSON.stringify(submission)}\n`, "utf8");
-  sendJson(response, 201, { message: "Upit je zaprimljen.", submissionId: submission.id });
+
+  const mailResult = await sendContactEmail(submission);
+  sendJson(response, 201, {
+    message: mailResult.sent
+      ? "Hvala, upit je zaprimljen i poslan."
+      : "Upit je spremljen lokalno. Email slanje još nije konfigurirano.",
+    submissionId: submission.id,
+    emailSent: mailResult.sent,
+    emailConfigured: mailResult.configured,
+  });
+}
+
+async function sendContactEmail(submission) {
+  const configured = Boolean(
+    process.env.SMTP_HOST &&
+      process.env.SMTP_PORT &&
+      process.env.SMTP_USER &&
+      process.env.SMTP_PASS &&
+      process.env.MAIL_TO
+  );
+
+  if (!configured) {
+    return { configured: false, sent: false };
+  }
+
+  let nodemailer;
+  try {
+    nodemailer = require("nodemailer");
+  } catch {
+    console.warn("nodemailer nije instaliran. Pokreni npm install za slanje emaila.");
+    return { configured: true, sent: false };
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: String(process.env.SMTP_SECURE || "").toLowerCase() === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  const from = process.env.MAIL_FROM || process.env.SMTP_USER;
+  const replyTo = submission.email || undefined;
+  const subject = `Donita upit: ${submission.name}`;
+  const text = [
+    "Novi upit s Donita web stranice",
+    "",
+    `Ime: ${submission.name}`,
+    `Telefon: ${submission.phone}`,
+    `Email: ${submission.email || "-"}`,
+    "",
+    "Napomena:",
+    submission.message || "-",
+    "",
+    `Zaprimljeno: ${submission.createdAt}`,
+  ].join("\n");
+
+  try {
+    await transporter.sendMail({
+      from,
+      to: process.env.MAIL_TO,
+      replyTo,
+      subject,
+      text,
+    });
+    return { configured: true, sent: true };
+  } catch (error) {
+    console.error("Email slanje nije uspjelo:", error);
+    return { configured: true, sent: false };
+  }
 }
 
 async function serveStatic(request, response) {

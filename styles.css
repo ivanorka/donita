@@ -627,6 +627,10 @@ h3 {
   color: var(--sage);
 }
 
+.form-status.warning {
+  color: var(--gold);
+}
+
 .form-status.error {
   color: var(--rose-deep);
 }
