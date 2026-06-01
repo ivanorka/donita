@@ -229,6 +229,7 @@ h1,
 h2 {
   margin: 0;
   font-family: "Inter Tight", Inter, sans-serif;
+  font-weight: 700;
   letter-spacing: -0.042em;
   line-height: 0.95;
 }
@@ -358,6 +359,7 @@ h3 {
   align-self: end;
   font-family: "Inter Tight", Inter, sans-serif;
   font-size: clamp(2rem, 4vw, 3.4rem);
+  font-weight: 700;
   letter-spacing: -0.038em;
   line-height: 0.95;
 }
@@ -538,6 +540,7 @@ h3 {
   align-self: end;
   font-family: "Inter Tight", Inter, sans-serif;
   font-size: clamp(1.8rem, 3.2vw, 3rem);
+  font-weight: 700;
   letter-spacing: -0.032em;
   line-height: 1;
 }
@@ -800,6 +803,7 @@ h3 {
   margin: 0;
   font-family: "Inter Tight", Inter, sans-serif;
   font-size: clamp(2.4rem, 6vw, 5.4rem);
+  font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1;
 }
