@@ -58,6 +58,22 @@ function sendAuthRequired(response) {
   sendJson(response, 401, { message: "Potrebna je prijava." });
 }
 
+function getSmtpStatus() {
+  const required = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "MAIL_TO"];
+  const missing = required.filter((key) => !process.env[key]);
+
+  return {
+    configured: missing.length === 0,
+    missing,
+    host: process.env.SMTP_HOST || "",
+    port: process.env.SMTP_PORT || "",
+    secure: String(process.env.SMTP_SECURE || "").toLowerCase() === "true",
+    user: process.env.SMTP_USER || "",
+    mailTo: process.env.MAIL_TO || "",
+    mailFrom: process.env.MAIL_FROM || process.env.SMTP_USER || "",
+  };
+}
+
 function loadEnvFile() {
   try {
     const contents = fsSync.readFileSync(path.join(root, ".env"), "utf8");
@@ -158,21 +174,25 @@ async function readSubmissions() {
 }
 
 async function sendContactEmails(submission) {
-  const configured = Boolean(
-    process.env.SMTP_HOST &&
-      process.env.SMTP_PORT &&
-      process.env.SMTP_USER &&
-      process.env.SMTP_PASS &&
-      process.env.MAIL_TO
-  );
+  const smtpStatus = getSmtpStatus();
 
-  if (!configured) {
+  if (!smtpStatus.configured) {
     return {
       configured: false,
       allSent: false,
       emails: [
-        { type: "salon", to: process.env.MAIL_TO || "", sent: false, error: "SMTP nije konfiguriran." },
-        { type: "client", to: submission.email || "", sent: false, error: "SMTP nije konfiguriran." },
+        {
+          type: "salon",
+          to: smtpStatus.mailTo,
+          sent: false,
+          error: `SMTP nije konfiguriran. Nedostaje: ${smtpStatus.missing.join(", ")}`,
+        },
+        {
+          type: "client",
+          to: submission.email || "",
+          sent: false,
+          error: `SMTP nije konfiguriran. Nedostaje: ${smtpStatus.missing.join(", ")}`,
+        },
       ],
     };
   }
@@ -193,16 +213,16 @@ async function sendContactEmails(submission) {
   }
 
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: String(process.env.SMTP_SECURE || "").toLowerCase() === "true",
+    host: smtpStatus.host,
+    port: Number(smtpStatus.port),
+    secure: smtpStatus.secure,
     auth: {
-      user: process.env.SMTP_USER,
+      user: smtpStatus.user,
       pass: process.env.SMTP_PASS,
     },
   });
 
-  const from = process.env.MAIL_FROM || process.env.SMTP_USER;
+  const from = smtpStatus.mailFrom;
   const replyTo = submission.email || undefined;
   const salonText = [
     "Novi upit s Donita web stranice",
@@ -235,7 +255,7 @@ async function sendContactEmails(submission) {
     await sendMailSafely(transporter, {
       type: "salon",
       from,
-      to: process.env.MAIL_TO,
+      to: smtpStatus.mailTo,
       replyTo,
       subject: `Donita upit: ${submission.name}`,
       text: salonText,
@@ -338,6 +358,15 @@ async function getAdminSubmissions(request, response) {
   sendJson(response, 200, { submissions: await readSubmissions() });
 }
 
+async function getAdminMailStatus(request, response) {
+  if (!isAdmin(request)) {
+    sendAuthRequired(response);
+    return;
+  }
+
+  sendJson(response, 200, getSmtpStatus());
+}
+
 async function serveStatic(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
   const requestedPath = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
@@ -382,6 +411,11 @@ const server = http.createServer(async (request, response) => {
 
     if (request.method === "GET" && url.pathname === "/api/admin/submissions") {
       await getAdminSubmissions(request, response);
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/admin/mail-status") {
+      await getAdminMailStatus(request, response);
       return;
     }
 

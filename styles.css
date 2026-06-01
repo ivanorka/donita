@@ -229,8 +229,8 @@ h1,
 h2 {
   margin: 0;
   font-family: "Inter Tight", Inter, sans-serif;
-  letter-spacing: -0.065em;
-  line-height: 0.92;
+  letter-spacing: -0.042em;
+  line-height: 0.95;
 }
 
 h1 {
@@ -358,8 +358,8 @@ h3 {
   align-self: end;
   font-family: "Inter Tight", Inter, sans-serif;
   font-size: clamp(2rem, 4vw, 3.4rem);
-  letter-spacing: -0.06em;
-  line-height: 0.9;
+  letter-spacing: -0.038em;
+  line-height: 0.95;
 }
 
 .visual-card small {
@@ -538,8 +538,8 @@ h3 {
   align-self: end;
   font-family: "Inter Tight", Inter, sans-serif;
   font-size: clamp(1.8rem, 3.2vw, 3rem);
-  letter-spacing: -0.05em;
-  line-height: 0.95;
+  letter-spacing: -0.032em;
+  line-height: 1;
 }
 
 .treatment-board small {
@@ -800,7 +800,7 @@ h3 {
   margin: 0;
   font-family: "Inter Tight", Inter, sans-serif;
   font-size: clamp(2.4rem, 6vw, 5.4rem);
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
   line-height: 1;
 }
 
@@ -811,6 +811,45 @@ h3 {
 .admin-list {
   display: grid;
   gap: 14px;
+}
+
+.mail-status-card {
+  display: grid;
+  gap: 8px;
+  padding: 20px 22px;
+  background: var(--charcoal);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.mail-status-card span {
+  color: var(--blush);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.mail-status-card strong {
+  font-family: "Inter Tight", Inter, sans-serif;
+  font-size: clamp(1.7rem, 3vw, 2.6rem);
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+.mail-status-card p {
+  max-width: 780px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.mail-status-card.ready {
+  background: var(--sage);
+}
+
+.mail-status-card.ready span,
+.mail-status-card.ready p {
+  color: rgba(255, 255, 255, 0.84);
 }
 
 .admin-item,
@@ -984,8 +1023,8 @@ h3 {
 @media (max-width: 640px) {
   h2 {
     font-size: clamp(2.05rem, 13vw, 3.5rem);
-    letter-spacing: -0.052em;
-    line-height: 0.98;
+    letter-spacing: -0.032em;
+    line-height: 1.02;
   }
 
   .service-grid,

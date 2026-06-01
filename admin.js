@@ -5,6 +5,7 @@ const loginStatus = loginForm?.querySelector(".form-status");
 const submissionsList = document.querySelector("#submissionsList");
 const refreshButton = document.querySelector("#refreshButton");
 const logoutButton = document.querySelector("#logoutButton");
+const mailStatusCard = document.querySelector("#mailStatusCard");
 
 function updateIcons() {
   if (window.lucide) {
@@ -82,8 +83,29 @@ function renderSubmissions(submissions) {
     .join("");
 }
 
+function renderMailStatus(status) {
+  if (!mailStatusCard) return;
+
+  const missing = status.missing || [];
+  const ready = status.configured && missing.length === 0;
+  mailStatusCard.classList.toggle("ready", ready);
+  mailStatusCard.classList.toggle("missing", !ready);
+  mailStatusCard.innerHTML = `
+    <span>Mail status</span>
+    <strong>${ready ? "SMTP je konfiguriran" : "SMTP nije spreman"}</strong>
+    <p>${
+      ready
+        ? `Upiti se šalju salonu na ${escapeHtml(status.mailTo)} i klijentu kao automatska potvrda.`
+        : `Nedostaje: ${missing.map(escapeHtml).join(", ")}. Upiti će se spremati lokalno dok se ovo ne dopuni.`
+    }</p>
+  `;
+}
+
 async function loadSubmissions() {
-  const response = await fetch("/api/admin/submissions");
+  const [response, statusResponse] = await Promise.all([
+    fetch("/api/admin/submissions"),
+    fetch("/api/admin/mail-status"),
+  ]);
 
   if (response.status === 401) {
     loginPanel.hidden = false;
@@ -93,6 +115,7 @@ async function loadSubmissions() {
   }
 
   const payload = await response.json();
+  const statusPayload = statusResponse.ok ? await statusResponse.json() : null;
   if (!response.ok) {
     throw new Error(payload.message || "Ne mogu učitati upite.");
   }
@@ -100,6 +123,9 @@ async function loadSubmissions() {
   loginPanel.hidden = true;
   submissionsPanel.hidden = false;
   logoutButton.hidden = false;
+  if (statusPayload) {
+    renderMailStatus(statusPayload);
+  }
   renderSubmissions(payload.submissions || []);
 }
 
