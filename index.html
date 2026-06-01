@@ -7,7 +7,7 @@
     <title>Donita | Kozmetički centar Zagreb</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="script.js" defer></script>
@@ -15,7 +15,6 @@
   <body>
     <header class="site-header">
       <a class="brand" href="#top" aria-label="Donita naslovna">
-        <span class="brand-mark">D</span>
         <span>
           <strong>Donita</strong>
           <small>Kozmetički centar</small>
@@ -38,13 +37,10 @@
 
     <main id="top">
       <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-media" aria-hidden="true">
-          <img src="assets/donita-slider-01.png" alt="">
-        </div>
         <div class="hero-content">
-          <p class="eyebrow">Vinogradska 2b, Zagreb</p>
+          <p class="eyebrow">Zagreb · Vinogradska 2b</p>
           <h1 id="hero-title">Donita</h1>
-          <p class="hero-copy">Njega lica i tijela u mirnom salonu s osobnim pristupom, stručnim tretmanima i cjenikom koji je lako pregledati prije rezervacije.</p>
+          <p class="hero-copy">Kozmetički centar za preciznu njegu lica i tijela, trajnu šminku i rituale koji izgledaju mirno, moderno i promišljeno.</p>
           <div class="hero-actions">
             <a class="button primary" href="#kontakt">
               <i data-lucide="calendar-check"></i>
@@ -55,6 +51,19 @@
               Pogledaj cjenik
             </a>
           </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="visual-card visual-card-main">
+            <span>01</span>
+            <strong>Face care</strong>
+            <small>Classic · Peeling · Plasma</small>
+          </div>
+          <div class="visual-card visual-card-accent">
+            <span>02</span>
+            <strong>Body rituals</strong>
+            <small>Massage · RF · Maderotherapy</small>
+          </div>
+          <div class="visual-swatch"></div>
         </div>
         <div class="hero-panel">
           <span>Radno vrijeme</span>
@@ -114,9 +123,27 @@
             <span>Maderoterapija</span>
           </div>
         </div>
-        <div class="image-stack">
-          <img src="assets/donita-slider-03.png" alt="Prostor kozmetičkog centra Donita">
-          <img src="assets/donita-slider-05.png" alt="Detalj salona Donita">
+        <div class="treatment-board" aria-label="Istaknuti tretmani">
+          <article>
+            <span>SKIN</span>
+            <strong>Oxygen Carbo2xy</strong>
+            <small>svježina i revitalizacija kože</small>
+          </article>
+          <article>
+            <span>LIFT</span>
+            <strong>Plasma lifting</strong>
+            <small>precizni anti-age protokoli</small>
+          </article>
+          <article>
+            <span>BODY</span>
+            <strong>Maderoterapija</strong>
+            <small>oblikovanje i tonus tijela</small>
+          </article>
+          <article>
+            <span>GLOW</span>
+            <strong>MesoPeel</strong>
+            <small>nježnija obnova teksture</small>
+          </article>
         </div>
       </section>
 
