@@ -131,11 +131,7 @@
             Preuzmi cjenik
           </a>
         </div>
-        <div class="price-toolbar" aria-label="Filtriranje cjenika">
-          <label class="search-field">
-            <i data-lucide="search"></i>
-            <input type="search" id="priceSearch" placeholder="Pretraži tretman, npr. pedikura, plasma, depilacija">
-          </label>
+        <div class="price-toolbar categories-only" aria-label="Filtriranje cjenika">
           <div class="filter-tabs" role="tablist" aria-label="Kategorije cjenika">
             <button class="active" type="button" data-filter="all">Sve</button>
             <button type="button" data-filter="lice">Lice</button>
@@ -316,7 +312,7 @@
         <form class="booking-form" id="contactForm">
           <label>Ime i prezime<input name="name" autocomplete="name" required></label>
           <label>Telefon<input name="phone" type="tel" autocomplete="tel" required></label>
-          <label>Email<input name="email" type="email" autocomplete="email"></label>
+          <label>Email<input name="email" type="email" autocomplete="email" required></label>
           <label>Napomena<textarea name="message" rows="5" placeholder="Tretman, željeni datum ili posebna napomena"></textarea></label>
           <button class="button primary" type="submit">
             <i data-lucide="send"></i>

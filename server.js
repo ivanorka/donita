@@ -8,6 +8,9 @@ const root = __dirname;
 const port = Number(process.env.PORT || 4173);
 const dataDir = path.join(root, "data");
 const submissionsPath = path.join(dataDir, "contact-submissions.jsonl");
+const adminUser = "Ivan";
+const adminPass = "Donita123*";
+const sessions = new Set();
 
 loadEnvFile();
 
@@ -31,6 +34,30 @@ function sendJson(response, status, payload) {
   response.end(JSON.stringify(payload));
 }
 
+function parseCookies(request) {
+  return Object.fromEntries(
+    String(request.headers.cookie || "")
+      .split(";")
+      .map((cookie) => cookie.trim())
+      .filter(Boolean)
+      .map((cookie) => {
+        const separator = cookie.indexOf("=");
+        return separator === -1
+          ? [cookie, ""]
+          : [cookie.slice(0, separator), decodeURIComponent(cookie.slice(separator + 1))];
+      })
+  );
+}
+
+function isAdmin(request) {
+  const token = parseCookies(request).donita_admin;
+  return Boolean(token && sessions.has(token));
+}
+
+function sendAuthRequired(response) {
+  sendJson(response, 401, { message: "Potrebna je prijava." });
+}
+
 function loadEnvFile() {
   try {
     const contents = fsSync.readFileSync(path.join(root, ".env"), "utf8");
@@ -46,80 +73,6 @@ function loadEnvFile() {
       }
     });
   } catch {}
-}
-
-function normalize(value) {
-  return String(value || "")
-    .toLocaleLowerCase("hr-HR")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function decodeEntities(value) {
-  return String(value)
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
-}
-
-function stripTags(value) {
-  return decodeEntities(String(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim());
-}
-
-async function loadPrices() {
-  const html = await fs.readFile(path.join(root, "index.html"), "utf8");
-  const cards = [];
-  const cardPattern = /<article class="price-card" data-category="([^"]+)">([\s\S]*?)<\/article>/g;
-  let cardMatch;
-
-  while ((cardMatch = cardPattern.exec(html))) {
-    const [, category, cardHtml] = cardMatch;
-    const title = stripTags(cardHtml.match(/<h3>([\s\S]*?)<\/h3>/)?.[1] || "");
-    const items = [];
-    const itemPattern = /<li><span>([\s\S]*?)<\/span><strong>([\s\S]*?)<\/strong><\/li>/g;
-    let itemMatch;
-
-    while ((itemMatch = itemPattern.exec(cardHtml))) {
-      items.push({
-        name: stripTags(itemMatch[1]),
-        price: stripTags(itemMatch[2]),
-      });
-    }
-
-    cards.push({ category, title, items });
-  }
-
-  return cards;
-}
-
-let priceCache;
-
-async function searchPrices(request, response) {
-  const url = new URL(request.url, `http://${request.headers.host}`);
-  const query = normalize(url.searchParams.get("q"));
-  const category = url.searchParams.get("category");
-  priceCache ||= await loadPrices();
-
-  const results = priceCache
-    .filter((card) => !category || category === "all" || card.category === category)
-    .map((card) => {
-      const searchable = normalize([
-        card.category,
-        card.title,
-        ...card.items.flatMap((item) => [item.name, item.price]),
-      ].join(" "));
-
-      return { card, searchable };
-    })
-    .filter(({ searchable }) => !query || searchable.includes(query))
-    .map(({ card }) => card);
-
-  sendJson(response, 200, { query, count: results.length, results });
 }
 
 async function readRequestBody(request) {
@@ -147,13 +100,14 @@ async function saveContact(request, response) {
     return;
   }
 
-  const submission = {
+  let submission = {
     id: randomUUID(),
     createdAt: new Date().toISOString(),
     name: String(payload.name || "").trim(),
     phone: String(payload.phone || "").trim(),
     email: String(payload.email || "").trim(),
     message: String(payload.message || "").trim(),
+    emails: [],
   };
 
   if (!submission.name || !submission.phone) {
@@ -161,26 +115,49 @@ async function saveContact(request, response) {
     return;
   }
 
-  if (submission.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(submission.email)) {
+  if (!submission.email) {
+    sendJson(response, 422, { message: "Molimo upišite email adresu." });
+    return;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(submission.email)) {
     sendJson(response, 422, { message: "Email adresa nije ispravna." });
     return;
   }
 
-  await fs.mkdir(dataDir, { recursive: true });
-  await fs.appendFile(submissionsPath, `${JSON.stringify(submission)}\n`, "utf8");
+  const mailResult = await sendContactEmails(submission);
+  submission = { ...submission, emails: mailResult.emails };
 
-  const mailResult = await sendContactEmail(submission);
+  await appendSubmission(submission);
   sendJson(response, 201, {
-    message: mailResult.sent
+    message: mailResult.allSent
       ? "Hvala, upit je zaprimljen i poslan."
       : "Upit je spremljen lokalno. Email slanje još nije konfigurirano.",
     submissionId: submission.id,
-    emailSent: mailResult.sent,
+    emailSent: mailResult.allSent,
     emailConfigured: mailResult.configured,
   });
 }
 
-async function sendContactEmail(submission) {
+async function appendSubmission(submission) {
+  await fs.mkdir(dataDir, { recursive: true });
+  await fs.appendFile(submissionsPath, `${JSON.stringify(submission)}\n`, "utf8");
+}
+
+async function readSubmissions() {
+  try {
+    const contents = await fs.readFile(submissionsPath, "utf8");
+    return contents
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .map((line) => JSON.parse(line))
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  } catch {
+    return [];
+  }
+}
+
+async function sendContactEmails(submission) {
   const configured = Boolean(
     process.env.SMTP_HOST &&
       process.env.SMTP_PORT &&
@@ -190,7 +167,14 @@ async function sendContactEmail(submission) {
   );
 
   if (!configured) {
-    return { configured: false, sent: false };
+    return {
+      configured: false,
+      allSent: false,
+      emails: [
+        { type: "salon", to: process.env.MAIL_TO || "", sent: false, error: "SMTP nije konfiguriran." },
+        { type: "client", to: submission.email || "", sent: false, error: "SMTP nije konfiguriran." },
+      ],
+    };
   }
 
   let nodemailer;
@@ -198,7 +182,14 @@ async function sendContactEmail(submission) {
     nodemailer = require("nodemailer");
   } catch {
     console.warn("nodemailer nije instaliran. Pokreni npm install za slanje emaila.");
-    return { configured: true, sent: false };
+    return {
+      configured: true,
+      allSent: false,
+      emails: [
+        { type: "salon", to: process.env.MAIL_TO, sent: false, error: "nodemailer nije instaliran." },
+        { type: "client", to: submission.email || "", sent: false, error: "nodemailer nije instaliran." },
+      ],
+    };
   }
 
   const transporter = nodemailer.createTransport({
@@ -213,8 +204,7 @@ async function sendContactEmail(submission) {
 
   const from = process.env.MAIL_FROM || process.env.SMTP_USER;
   const replyTo = submission.email || undefined;
-  const subject = `Donita upit: ${submission.name}`;
-  const text = [
+  const salonText = [
     "Novi upit s Donita web stranice",
     "",
     `Ime: ${submission.name}`,
@@ -226,20 +216,126 @@ async function sendContactEmail(submission) {
     "",
     `Zaprimljeno: ${submission.createdAt}`,
   ].join("\n");
+  const clientText = [
+    `Poštovani/a ${submission.name},`,
+    "",
+    "hvala na upitu za Kozmetički centar Donita.",
+    "Vaša poruka je zaprimljena i javit ćemo Vam se uskoro radi potvrde termina ili dodatnih informacija.",
+    "",
+    "Srdačan pozdrav,",
+    "Kozmetički centar Donita",
+    "Vinogradska 2b, Zagreb",
+    "Tel. 01 / 37 05 027",
+    "Mob. 091 531 66 98",
+  ].join("\n");
 
-  try {
-    await transporter.sendMail({
+  const emails = [];
+
+  emails.push(
+    await sendMailSafely(transporter, {
+      type: "salon",
       from,
       to: process.env.MAIL_TO,
       replyTo,
-      subject,
-      text,
+      subject: `Donita upit: ${submission.name}`,
+      text: salonText,
+    })
+  );
+
+  if (submission.email) {
+    emails.push(
+      await sendMailSafely(transporter, {
+        type: "client",
+        from,
+        to: submission.email,
+        subject: "Donita: Vaš upit je zaprimljen",
+        text: clientText,
+      })
+    );
+  } else {
+    emails.push({ type: "client", to: "", sent: false, error: "Klijent nije upisao email." });
+  }
+
+  const allSent = emails.every((email) => email.sent);
+
+  return {
+    configured: true,
+    allSent,
+    emails,
+  };
+}
+
+async function sendMailSafely(transporter, mail) {
+  try {
+    await transporter.sendMail({
+      from: mail.from,
+      to: mail.to,
+      replyTo: mail.replyTo,
+      subject: mail.subject,
+      text: mail.text,
     });
-    return { configured: true, sent: true };
+    return {
+      type: mail.type,
+      to: mail.to,
+      subject: mail.subject,
+      sent: true,
+      sentAt: new Date().toISOString(),
+    };
   } catch (error) {
     console.error("Email slanje nije uspjelo:", error);
-    return { configured: true, sent: false };
+    return {
+      type: mail.type,
+      to: mail.to,
+      subject: mail.subject,
+      sent: false,
+      error: error.message,
+    };
   }
+}
+
+async function loginAdmin(request, response) {
+  let payload;
+
+  try {
+    payload = JSON.parse(await readRequestBody(request));
+  } catch {
+    sendJson(response, 400, { message: "Podaci nisu ispravno poslani." });
+    return;
+  }
+
+  if (payload.username !== adminUser || payload.password !== adminPass) {
+    sendJson(response, 401, { message: "Neispravno korisničko ime ili lozinka." });
+    return;
+  }
+
+  const token = randomUUID();
+  sessions.add(token);
+  response.writeHead(200, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+    "Set-Cookie": `donita_admin=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=28800`,
+  });
+  response.end(JSON.stringify({ message: "Prijava uspješna." }));
+}
+
+async function logoutAdmin(request, response) {
+  const token = parseCookies(request).donita_admin;
+  if (token) sessions.delete(token);
+  response.writeHead(200, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+    "Set-Cookie": "donita_admin=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0",
+  });
+  response.end(JSON.stringify({ message: "Odjavljeni ste." }));
+}
+
+async function getAdminSubmissions(request, response) {
+  if (!isAdmin(request)) {
+    sendAuthRequired(response);
+    return;
+  }
+
+  sendJson(response, 200, { submissions: await readSubmissions() });
 }
 
 async function serveStatic(request, response) {
@@ -269,13 +365,23 @@ const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host}`);
 
-    if (request.method === "GET" && url.pathname === "/api/search") {
-      await searchPrices(request, response);
+    if (request.method === "POST" && url.pathname === "/api/contact") {
+      await saveContact(request, response);
       return;
     }
 
-    if (request.method === "POST" && url.pathname === "/api/contact") {
-      await saveContact(request, response);
+    if (request.method === "POST" && url.pathname === "/api/admin/login") {
+      await loginAdmin(request, response);
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/admin/logout") {
+      await logoutAdmin(request, response);
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/admin/submissions") {
+      await getAdminSubmissions(request, response);
       return;
     }
 

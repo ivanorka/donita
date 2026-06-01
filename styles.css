@@ -170,8 +170,7 @@ textarea {
 .header-cta svg,
 .nav-toggle svg,
 .service-grid svg,
-.contact-list svg,
-.search-field svg {
+.contact-list svg {
   width: 18px;
   height: 18px;
   flex: 0 0 auto;
@@ -441,28 +440,12 @@ h3 {
   backdrop-filter: blur(16px);
 }
 
-.search-field {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 48px;
-  padding: 0 14px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+.price-toolbar.categories-only {
+  grid-template-columns: 1fr;
 }
 
-.search-field svg {
-  color: var(--sage);
-}
-
-.search-field input {
-  width: 100%;
-  min-width: 0;
-  color: var(--ink);
-  background: transparent;
-  border: 0;
-  outline: 0;
+.price-toolbar.categories-only .filter-tabs {
+  justify-content: flex-start;
 }
 
 .filter-tabs {
@@ -534,6 +517,16 @@ h3 {
 .price-note {
   max-width: 980px;
   margin: 24px 0 0;
+}
+
+.price-empty {
+  padding: 18px;
+  margin: 0;
+  color: var(--muted);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-weight: 800;
 }
 
 .gift-band {
@@ -609,8 +602,7 @@ h3 {
 }
 
 .booking-form input:focus,
-.booking-form textarea:focus,
-.search-field:focus-within {
+.booking-form textarea:focus {
   border-color: var(--rose);
   box-shadow: 0 0 0 4px rgba(185, 99, 115, 0.14);
 }
@@ -643,6 +635,141 @@ h3 {
   padding: 26px clamp(18px, 6vw, 88px);
   color: rgba(255, 255, 255, 0.8);
   background: var(--plum);
+}
+
+.admin-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fffaf7 0%, #f7ece8 54%, #dfeadd 100%);
+}
+
+.admin-shell {
+  width: min(1120px, calc(100% - 36px));
+  margin: 0 auto;
+  padding: 24px 0 72px;
+}
+
+.admin-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.admin-login,
+.admin-panel {
+  display: grid;
+  gap: 22px;
+}
+
+.admin-login {
+  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.75fr);
+  align-items: start;
+}
+
+.admin-login h1,
+.admin-panel h1 {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: clamp(2.4rem, 6vw, 5.4rem);
+  line-height: 1;
+}
+
+.admin-login p {
+  color: var(--muted);
+}
+
+.admin-list {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-item,
+.admin-empty {
+  padding: 22px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 16px 42px rgba(70, 50, 71, 0.08);
+}
+
+.admin-item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.admin-item-head h2 {
+  margin: 0;
+  color: var(--plum);
+  font-size: 1.35rem;
+}
+
+.admin-item-head p,
+.admin-item-head span,
+.admin-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.admin-item-head span {
+  font-size: 0.76rem;
+}
+
+.admin-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.admin-meta a,
+.admin-meta span {
+  padding: 7px 10px;
+  color: var(--plum);
+  background: var(--soft);
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.admin-message {
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+.email-statuses {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 18px 0 0;
+  list-style: none;
+}
+
+.email-statuses li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.email-statuses li.sent {
+  background: rgba(111, 143, 122, 0.12);
+}
+
+.email-statuses li.not-sent {
+  background: rgba(199, 155, 88, 0.14);
+}
+
+.email-statuses span,
+.email-statuses strong {
+  color: var(--plum);
+}
+
+.email-statuses small {
+  grid-column: 1 / -1;
+  color: var(--muted);
 }
 
 .site-footer span {

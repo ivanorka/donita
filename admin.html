@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="hr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Donita admin | Upiti</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="admin.js" defer></script>
+  </head>
+  <body class="admin-page">
+    <main class="admin-shell">
+      <section class="admin-hero">
+        <a class="brand" href="/">
+          <span class="brand-mark">D</span>
+          <span>
+            <strong>Donita</strong>
+            <small>Admin upiti</small>
+          </span>
+        </a>
+        <button class="button secondary compact" id="logoutButton" type="button" hidden>
+          <i data-lucide="log-out"></i>
+          Odjava
+        </button>
+      </section>
+
+      <section class="admin-login" id="loginPanel">
+        <div>
+          <p class="eyebrow">Prijava</p>
+          <h1>Pregled upita</h1>
+          <p>Pristup je za sada lokalno zaštićen hardcodiranim korisnikom.</p>
+        </div>
+        <form class="booking-form" id="adminLoginForm">
+          <label>Korisnik<input name="username" autocomplete="username" required></label>
+          <label>Lozinka<input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="button primary" type="submit">
+            <i data-lucide="log-in"></i>
+            Prijava
+          </button>
+          <p class="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="admin-panel" id="submissionsPanel" hidden>
+        <div class="section-head split">
+          <div>
+            <p class="eyebrow">Inbox</p>
+            <h1>Zaprimljeni upiti</h1>
+          </div>
+          <button class="button secondary compact" id="refreshButton" type="button">
+            <i data-lucide="refresh-cw"></i>
+            Osvježi
+          </button>
+        </div>
+        <div class="admin-list" id="submissionsList"></div>
+      </section>
+    </main>
+  </body>
+</html>
