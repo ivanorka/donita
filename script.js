@@ -126,7 +126,14 @@ contactForm?.addEventListener("submit", async (event) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const result = await response.json();
+    const responseText = await response.text();
+    let result = {};
+
+    try {
+      result = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      throw new Error("Kontakt forma trenutno nije dostupna. Molimo nazovite salon.");
+    }
 
     if (!response.ok) {
       throw new Error(result.message || "Slanje nije uspjelo.");

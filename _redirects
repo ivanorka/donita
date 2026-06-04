@@ -1,4 +1,5 @@
 /admin.html / 301
+/api/contact /.netlify/functions/contact 200
 /blog /blog/ 301
 /contact/ /#kontakt 301
 /o-nama/ /#top 301
