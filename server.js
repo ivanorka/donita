@@ -8,9 +8,32 @@ const root = __dirname;
 const port = Number(process.env.PORT || 4173);
 const dataDir = path.join(root, "data");
 const submissionsPath = path.join(dataDir, "contact-submissions.jsonl");
-const adminUser = "Ivan";
-const adminPass = "Donita123*";
-const sessions = new Set();
+const defaultMailTo = "ilozancic@gmail.com";
+const redirects = new Map([
+  ["/admin.html", "/"],
+  ["/blog", "/blog/"],
+  ["/contact/", "/#kontakt"],
+  ["/o-nama/", "/#top"],
+  ["/about/", "/#top"],
+  ["/cjenik/", "/#cjenik"],
+  ["/category/cjenik/", "/#cjenik"],
+  ["/klasicni-tretmani-lica/", "/blog/tretmani-lica.html"],
+  ["/specijalni-tretmani-za-lice/", "/blog/tretmani-lica.html"],
+  ["/tretmani-lica/", "/blog/tretmani-lica.html"],
+  ["/klasicni-tretmani-tijela/", "/blog/tretmani-tijela.html"],
+  ["/anticelulitni-tretmani/", "/blog/tretmani-tijela.html"],
+  ["/maderoterapija/", "/blog/maderoterapija-i-oblikovanje.html"],
+  ["/oblikovanje-tijela/", "/blog/maderoterapija-i-oblikovanje.html"],
+  ["/tretmani-trajna-sminka/", "/blog/trajna-sminka.html"],
+  ["/trajna-sminka/", "/blog/trajna-sminka.html"],
+  ["/priprema-za-trajnu-sminku/", "/blog/priprema-za-trajnu-sminku.html"],
+  ["/njega-koze/", "/blog/kako-odabrati-tretman.html"],
+  ["/njega-koze-nakon-tretmana/", "/blog/rutina-nakon-tretmana.html"],
+  ["/tretmani-za-ruke-i-nokte/", "/blog/ruke-stopala.html"],
+  ["/tretmani-za-stopala/", "/blog/ruke-stopala.html"],
+  ["/category/onama/", "/#top"],
+  ["/1650-2/", "/#top"],
+]);
 
 loadEnvFile();
 
@@ -19,6 +42,8 @@ const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8",
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
@@ -34,32 +59,8 @@ function sendJson(response, status, payload) {
   response.end(JSON.stringify(payload));
 }
 
-function parseCookies(request) {
-  return Object.fromEntries(
-    String(request.headers.cookie || "")
-      .split(";")
-      .map((cookie) => cookie.trim())
-      .filter(Boolean)
-      .map((cookie) => {
-        const separator = cookie.indexOf("=");
-        return separator === -1
-          ? [cookie, ""]
-          : [cookie.slice(0, separator), decodeURIComponent(cookie.slice(separator + 1))];
-      })
-  );
-}
-
-function isAdmin(request) {
-  const token = parseCookies(request).donita_admin;
-  return Boolean(token && sessions.has(token));
-}
-
-function sendAuthRequired(response) {
-  sendJson(response, 401, { message: "Potrebna je prijava." });
-}
-
 function getSmtpStatus() {
-  const required = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "MAIL_TO"];
+  const required = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS"];
   const missing = required.filter((key) => !process.env[key]);
 
   return {
@@ -69,7 +70,7 @@ function getSmtpStatus() {
     port: process.env.SMTP_PORT || "",
     secure: String(process.env.SMTP_SECURE || "").toLowerCase() === "true",
     user: process.env.SMTP_USER || "",
-    mailTo: process.env.MAIL_TO || "",
+    mailTo: process.env.MAIL_TO || defaultMailTo,
     mailFrom: process.env.MAIL_FROM || process.env.SMTP_USER || "",
   };
 }
@@ -147,8 +148,8 @@ async function saveContact(request, response) {
   await appendSubmission(submission);
   sendJson(response, 201, {
     message: mailResult.allSent
-      ? "Hvala, upit je zaprimljen i poslan."
-      : "Upit je spremljen lokalno. Email slanje još nije konfigurirano.",
+      ? "Hvala, upit je zaprimljen. Javit ćemo Vam se uskoro."
+      : "Upit je zaprimljen, ali email slanje trenutno nije uspjelo. Molimo nazovite salon ako je hitno.",
     submissionId: submission.id,
     emailSent: mailResult.allSent,
     emailConfigured: mailResult.configured,
@@ -158,19 +159,6 @@ async function saveContact(request, response) {
 async function appendSubmission(submission) {
   await fs.mkdir(dataDir, { recursive: true });
   await fs.appendFile(submissionsPath, `${JSON.stringify(submission)}\n`, "utf8");
-}
-
-async function readSubmissions() {
-  try {
-    const contents = await fs.readFile(submissionsPath, "utf8");
-    return contents
-      .split(/\r?\n/)
-      .filter(Boolean)
-      .map((line) => JSON.parse(line))
-      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-  } catch {
-    return [];
-  }
 }
 
 async function sendContactEmails(submission) {
@@ -187,12 +175,6 @@ async function sendContactEmails(submission) {
           sent: false,
           error: `SMTP nije konfiguriran. Nedostaje: ${smtpStatus.missing.join(", ")}`,
         },
-        {
-          type: "client",
-          to: submission.email || "",
-          sent: false,
-          error: `SMTP nije konfiguriran. Nedostaje: ${smtpStatus.missing.join(", ")}`,
-        },
       ],
     };
   }
@@ -206,8 +188,7 @@ async function sendContactEmails(submission) {
       configured: true,
       allSent: false,
       emails: [
-        { type: "salon", to: process.env.MAIL_TO, sent: false, error: "nodemailer nije instaliran." },
-        { type: "client", to: submission.email || "", sent: false, error: "nodemailer nije instaliran." },
+        { type: "salon", to: smtpStatus.mailTo, sent: false, error: "nodemailer nije instaliran." },
       ],
     };
   }
@@ -236,19 +217,6 @@ async function sendContactEmails(submission) {
     "",
     `Zaprimljeno: ${submission.createdAt}`,
   ].join("\n");
-  const clientText = [
-    `Poštovani/a ${submission.name},`,
-    "",
-    "hvala na upitu za Kozmetički centar Donita.",
-    "Vaša poruka je zaprimljena i javit ćemo Vam se uskoro radi potvrde termina ili dodatnih informacija.",
-    "",
-    "Srdačan pozdrav,",
-    "Kozmetički centar Donita",
-    "Vinogradska 2b, Zagreb",
-    "Tel. 01 / 37 05 027",
-    "Mob. 091 531 66 98",
-  ].join("\n");
-
   const emails = [];
 
   emails.push(
@@ -261,20 +229,6 @@ async function sendContactEmails(submission) {
       text: salonText,
     })
   );
-
-  if (submission.email) {
-    emails.push(
-      await sendMailSafely(transporter, {
-        type: "client",
-        from,
-        to: submission.email,
-        subject: "Donita: Vaš upit je zaprimljen",
-        text: clientText,
-      })
-    );
-  } else {
-    emails.push({ type: "client", to: "", sent: false, error: "Klijent nije upisao email." });
-  }
 
   const allSent = emails.every((email) => email.sent);
 
@@ -313,63 +267,25 @@ async function sendMailSafely(transporter, mail) {
   }
 }
 
-async function loginAdmin(request, response) {
-  let payload;
-
-  try {
-    payload = JSON.parse(await readRequestBody(request));
-  } catch {
-    sendJson(response, 400, { message: "Podaci nisu ispravno poslani." });
-    return;
-  }
-
-  if (payload.username !== adminUser || payload.password !== adminPass) {
-    sendJson(response, 401, { message: "Neispravno korisničko ime ili lozinka." });
-    return;
-  }
-
-  const token = randomUUID();
-  sessions.add(token);
-  response.writeHead(200, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store",
-    "Set-Cookie": `donita_admin=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=28800`,
-  });
-  response.end(JSON.stringify({ message: "Prijava uspješna." }));
-}
-
-async function logoutAdmin(request, response) {
-  const token = parseCookies(request).donita_admin;
-  if (token) sessions.delete(token);
-  response.writeHead(200, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store",
-    "Set-Cookie": "donita_admin=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0",
-  });
-  response.end(JSON.stringify({ message: "Odjavljeni ste." }));
-}
-
-async function getAdminSubmissions(request, response) {
-  if (!isAdmin(request)) {
-    sendAuthRequired(response);
-    return;
-  }
-
-  sendJson(response, 200, { submissions: await readSubmissions() });
-}
-
-async function getAdminMailStatus(request, response) {
-  if (!isAdmin(request)) {
-    sendAuthRequired(response);
-    return;
-  }
-
-  sendJson(response, 200, getSmtpStatus());
-}
-
 async function serveStatic(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
-  const requestedPath = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
+  const redirectTarget =
+    redirects.get(url.pathname) ||
+    (url.pathname.startsWith("/category/cjenik/") ? "/#cjenik" : "") ||
+    (url.pathname.startsWith("/category/onama/") ? "/#top" : "");
+
+  if (redirectTarget) {
+    response.writeHead(301, { Location: redirectTarget });
+    response.end();
+    return;
+  }
+
+  const requestedPath =
+    url.pathname === "/"
+      ? "/index.html"
+      : url.pathname.endsWith("/")
+        ? `${decodeURIComponent(url.pathname)}index.html`
+        : decodeURIComponent(url.pathname);
   const filePath = path.resolve(root, `.${requestedPath}`);
 
   if (!filePath.startsWith(root)) {
@@ -396,26 +312,6 @@ const server = http.createServer(async (request, response) => {
 
     if (request.method === "POST" && url.pathname === "/api/contact") {
       await saveContact(request, response);
-      return;
-    }
-
-    if (request.method === "POST" && url.pathname === "/api/admin/login") {
-      await loginAdmin(request, response);
-      return;
-    }
-
-    if (request.method === "POST" && url.pathname === "/api/admin/logout") {
-      await logoutAdmin(request, response);
-      return;
-    }
-
-    if (request.method === "GET" && url.pathname === "/api/admin/submissions") {
-      await getAdminSubmissions(request, response);
-      return;
-    }
-
-    if (request.method === "GET" && url.pathname === "/api/admin/mail-status") {
-      await getAdminMailStatus(request, response);
       return;
     }
 

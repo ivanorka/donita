@@ -15,10 +15,7 @@
   <body>
     <header class="site-header">
       <a class="brand" href="/" aria-label="Donita naslovna">
-        <span>
-          <strong>Donita</strong>
-          <small>Kozmetički centar</small>
-        </span>
+        <img src="assets/donita-logo.png" alt="Donita Kozmetički centar">
       </a>
       <button class="nav-toggle" type="button" aria-label="Otvori navigaciju" aria-expanded="false">
         <i data-lucide="menu"></i>
@@ -27,6 +24,7 @@
         <a href="#usluge">Usluge</a>
         <a href="#tretmani">Tretmani</a>
         <a href="#cjenik">Cjenik</a>
+        <a href="blog/">Članci</a>
         <a href="#kontakt">Kontakt</a>
       </nav>
       <a class="header-cta" href="tel:+385915316698">
@@ -37,10 +35,11 @@
 
     <main id="top">
       <section class="hero" aria-labelledby="hero-title">
+        <div class="contour contour-hero" aria-hidden="true"></div>
         <div class="hero-content">
           <p class="eyebrow">Zagreb · Vinogradska 2b</p>
-          <h1 id="hero-title">Donita</h1>
-          <p class="hero-copy">Kozmetički centar za preciznu njegu lica i tijela, trajnu šminku i rituale koji izgledaju mirno, moderno i promišljeno.</p>
+          <h1 id="hero-title">Kozmetički centar Donita</h1>
+          <p class="hero-copy">Precizna njega lica i tijela, trajna šminka i tretmani koji spajaju stručnost, miran ambijent i prepoznatljivu Donita eleganciju.</p>
           <div class="hero-actions">
             <a class="button primary" href="#kontakt">
               <i data-lucide="calendar-check"></i>
@@ -52,18 +51,14 @@
             </a>
           </div>
         </div>
-        <div class="hero-visual" aria-hidden="true">
-          <div class="visual-card visual-card-main">
-            <span>01</span>
-            <strong>Face care</strong>
-            <small>Classic · Peeling · Plasma</small>
+        <div class="hero-visual">
+          <figure class="hero-photo">
+            <img src="assets/photos/salon-hero.jpg" alt="Interijer kozmetičkog centra Donita">
+          </figure>
+          <div class="hero-stat" aria-hidden="true">
+            <span>Vinogradska 2b</span>
+            <strong>Beauty studio Zagreb</strong>
           </div>
-          <div class="visual-card visual-card-accent">
-            <span>02</span>
-            <strong>Body rituals</strong>
-            <small>Massage · RF · Maderotherapy</small>
-          </div>
-          <div class="visual-swatch"></div>
         </div>
         <div class="hero-panel">
           <span>Radno vrijeme</span>
@@ -73,47 +68,54 @@
       </section>
 
       <section class="intro section-pad">
+        <div class="contour contour-soft" aria-hidden="true"></div>
         <div>
           <p class="eyebrow">Kozmetički centar Donita</p>
-          <h2>Čisto, moderno i usmjereno na ono zbog čega dolazite: dobar tretman i osjećaj povjerenja.</h2>
+          <h2>Njega kojoj se vraćate jer je stručna, smirena i pažljivo odmjerena.</h2>
+          <p>U Doniti tretman nije samo termin u kalendaru, nego trenutak u kojem koža, tijelo i lice dobivaju posvećenu pažnju. Radimo mirno, precizno i individualno, od klasične njege do naprednijih protokola za lice, tijelo i trajnu šminku.</p>
         </div>
-        <p>Donita nudi tretmane lica, tijela, trajnu šminku, depilaciju, njegu ruku i stopala te poklon bonove. Tekstovi su osvježeni, ali zadržavaju postojeće informacije salona: stručan rad, ugodan ambijent i tretmane od klasične njege do naprednijih lifting i anticelulitnih protokola.</p>
+        <div class="intro-gallery" aria-label="Fotografije salona Donita">
+          <img src="assets/photos/salon-main-room.jpg" alt="Topao interijer kozmetičkog centra Donita">
+          <img src="assets/photos/salon-reception.jpg" alt="Recepcijski i proizvodni kutak salona Donita">
+        </div>
       </section>
 
       <section id="usluge" class="services section-pad" aria-labelledby="services-title">
+        <div class="contour contour-services" aria-hidden="true"></div>
         <div class="section-head">
           <p class="eyebrow">Ponuda</p>
-          <h2 id="services-title">Usluge za lice, tijelo i svakodnevnu njegu</h2>
+          <h2 id="services-title">Usluge za lice, tijelo i njegovan svakodnevni izgled</h2>
         </div>
         <div class="service-grid">
           <article>
             <i data-lucide="sparkles"></i>
             <h3>Tretmani lica</h3>
-            <p>Klasična njega, čišćenje, masaže, peeling, maske i specijalni anti-age tretmani prilagođeni tipu i stanju kože.</p>
+            <p>Od čišćenja i klasične njege do specijalnih tretmana za svježinu, ujednačen ten i njegovan anti-age dojam.</p>
           </article>
           <article>
             <i data-lucide="flower-2"></i>
             <h3>Tretmani tijela</h3>
-            <p>Masaže, limfna drenaža, maderoterapija, body wrapping, RF i tretmani za oblikovanje tijela.</p>
+            <p>Masaže, limfna drenaža, maderoterapija i tretmani oblikovanja za osjećaj lakoće, tonusa i opuštenosti.</p>
           </article>
           <article>
             <i data-lucide="eye"></i>
             <h3>Trajna šminka</h3>
-            <p>Obrve, kapci, usne i korekcije izvedene pigmentima provjerenih profesionalnih brendova.</p>
+            <p>Obrve, kapci i usne s prirodnim pristupom, preciznom izvedbom i naglaskom na sklad lica.</p>
           </article>
           <article>
             <i data-lucide="hand"></i>
             <h3>Ruke i stopala</h3>
-            <p>Manikura, trajni lak, gel, pedikura, lakiranje i završna njega za uredan, njegovan izgled.</p>
+            <p>Manikura, pedikura, gel i trajni lak za uredan završni detalj koji se vidi u svakom pokretu.</p>
           </article>
         </div>
       </section>
 
       <section id="tretmani" class="feature-band">
+        <div class="contour contour-feature" aria-hidden="true"></div>
         <div class="feature-copy">
           <p class="eyebrow">Istaknuto</p>
           <h2>Popularni tretmani iz Donita ponude</h2>
-          <p>Za umornu kožu, konture lica, opuštanje ili oblikovanje tijela, tretmani su složeni tako da se lako pronađe pravi intenzitet: od osnovne njege do ciljanih kura.</p>
+          <p>Za svježinu kože, jasnije konture, opuštanje ili oblikovanje tijela biramo tretmane koji imaju smisla za vaš ritam, kožu i cilj.</p>
           <div class="chips">
             <span>Oxygen Carbo2xy</span>
             <span>MesoPeel</span>
@@ -158,7 +160,7 @@
             Preuzmi cjenik
           </a>
         </div>
-        <div class="price-toolbar categories-only" aria-label="Filtriranje cjenika">
+        <div class="price-toolbar" aria-label="Filtriranje i prikaz cjenika">
           <div class="filter-tabs" role="tablist" aria-label="Kategorije cjenika">
             <button class="active" type="button" data-filter="all">Sve</button>
             <button type="button" data-filter="lice">Lice</button>
@@ -166,6 +168,11 @@
             <button type="button" data-filter="depilacija">Depilacija</button>
             <button type="button" data-filter="trajna">Trajna šminka</button>
             <button type="button" data-filter="ruke">Ruke i stopala</button>
+          </div>
+          <div class="price-switch" role="group" aria-label="Način plaćanja">
+            <span>Prikaz cijena</span>
+            <button class="active" type="button" data-price-mode="cash">Gotovina -5%</button>
+            <button type="button" data-price-mode="card">Kartica</button>
           </div>
         </div>
         <div class="price-grid" id="priceGrid">
@@ -309,16 +316,17 @@
           </article>
         </div>
         <p class="price-empty" hidden>Nema rezultata za unesenu pretragu.</p>
-        <p class="price-note">Cijene su izražene u eurima. Odobravamo popust od 5% za gotovinsko plaćanje i kartično plaćanje iznad 70,00 EUR. Za detalje o tretmanima i terminima slobodno kontaktirajte salon.</p>
+        <p class="price-note" id="priceNote">Prikazane su cijene za gotovinsko plaćanje s uključenim popustom od 5%. Za kartično plaćanje prebacite prikaz na “Kartica”.</p>
       </section>
 
       <section class="gift-band">
+        <img src="assets/donita-mark.png" alt="" aria-hidden="true">
         <div>
           <p class="eyebrow">Darovnice</p>
           <h2>Poklon koji se stvarno iskoristi</h2>
           <p>Darovnica može biti za odabrani tretman ili iznos po izboru, pa osoba sama odabire njegu koja joj najviše odgovara.</p>
         </div>
-        <a class="button primary" href="mailto:salon.donita@gmail.com?subject=Upit%20za%20Donita%20darovnicu">
+        <a class="button primary" href="#kontakt" data-gift-inquiry>
           <i data-lucide="gift"></i>
           Pošalji upit
         </a>
@@ -352,7 +360,7 @@
 
     <footer class="site-footer">
       <div>
-        <strong>Donita</strong>
+        <img src="assets/donita-logo.png" alt="Donita Kozmetički centar">
         <span>Kozmetički centar, Vinogradska 2b, Zagreb</span>
       </div>
       <a href="#top">Na vrh</a>
