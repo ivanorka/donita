@@ -1010,20 +1010,28 @@ h3 {
 
 .related-articles div {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 22px;
 }
 
 .related-articles a {
-  display: flex;
-  align-items: center;
+  display: grid;
+  gap: 5px;
+  align-content: center;
   min-height: 66px;
   padding: 14px 16px;
   color: var(--charcoal);
   background: var(--paper);
   border: 1px solid var(--line);
   font-weight: 900;
+}
+
+.related-articles a span {
+  color: var(--gold-deep);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .blog-page {
