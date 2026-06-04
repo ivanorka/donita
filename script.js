@@ -42,26 +42,26 @@ function formatEuro(value) {
   return `${value.toFixed(2).replace(".", ",")} €`;
 }
 
-function cardPriceText(cashText) {
-  const match = cashText.match(/(\d+(?:,\d{2})?)\s*€/);
-  if (!match) return cashText;
+function cashPriceText(cardText) {
+  const match = cardText.match(/(\d+(?:,\d{2})?)\s*€/);
+  if (!match) return cardText;
 
-  const cashValue = Number(match[1].replace(",", "."));
-  if (!Number.isFinite(cashValue)) return cashText;
+  const cardValue = Number(match[1].replace(",", "."));
+  if (!Number.isFinite(cardValue)) return cardText;
 
-  const cardValue = formatEuro(cashValue / 0.95);
-  return cashText.replace(match[0], cardValue);
+  const discountedValue = formatEuro(Math.round(cardValue * 0.95));
+  return cardText.replace(match[0], discountedValue);
 }
 
 function applyPriceMode() {
   priceCards.forEach((card) => {
     card.querySelectorAll("strong").forEach((price) => {
-      if (!price.dataset.cashPrice) {
-        price.dataset.cashPrice = price.textContent.trim();
+      if (!price.dataset.cardPrice) {
+        price.dataset.cardPrice = price.textContent.trim();
       }
 
-      const cashPrice = price.dataset.cashPrice;
-      price.textContent = activePriceMode === "cash" ? cashPrice : cardPriceText(cashPrice);
+      const cardPrice = price.dataset.cardPrice;
+      price.textContent = activePriceMode === "cash" ? cashPriceText(cardPrice) : cardPrice;
     });
   });
 
