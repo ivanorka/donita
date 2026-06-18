@@ -63,11 +63,11 @@ textarea {
 .brand {
   display: inline-flex;
   align-items: center;
-  min-width: 180px;
+  min-width: 220px;
 }
 
 .brand img {
-  width: clamp(154px, 15vw, 224px);
+  width: clamp(188px, 18vw, 272px);
   height: auto;
 }
 
