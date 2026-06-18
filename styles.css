@@ -1315,6 +1315,33 @@ h3 {
     width: 100%;
   }
 
+  .post-grid article {
+    position: relative;
+    min-height: 360px;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .post-grid img {
+    min-height: 360px;
+  }
+
+  .post-grid article > div {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(10px);
+  }
+
+  .post-grid h2 {
+    max-width: 100%;
+    font-size: clamp(1.45rem, 8vw, 2.1rem);
+  }
+
   .hero-actions .button {
     width: 100%;
   }
